@@ -5,10 +5,10 @@ const multer = require('multer');
 var express = require('express');
 var app = express();
 
-const xlsx = require('xlsx');
-const file = xlsx.readFile('Financial_Sample.xlsx');
-const sheet = file.SheetNames;
-const result = (xlsx.utils.sheet_to_json(file.Sheets[sheet[0]]));
+// const xlsx = require('xlsx');
+// const file = xlsx.readFile('Financial_Sample.xlsx');
+// const sheet = file.SheetNames;
+// const result = (xlsx.utils.sheet_to_json(file.Sheets[sheet[0]]));
 // console.log(result);
 
 
@@ -39,36 +39,64 @@ var storage  = multer.diskStorage({
 });
 var upload = multer({storage:storage});
 
-app.post('/xlsx',upload.single('file'), (req, res) => {
-    var exceltojson;
-    const file = req.file;
+// app.post('/xlsx',upload.single('file'), (req, res) => {
+//     var exceltojson;
+//     const file = req.file;
+//     if(!file){
+//         res.status(404).send({msg:'No file found'});
+//     } 
+//     if(req.file.originalname.split('.')[1] !== 'xlsx'){
+//         res.status(500).send({Error: 'Wrong file format'});
+//     }else {
+//     if(req.file.originalname.split('.')[1] === 'xlsx'){
+//         exceltojson = xlsxtojson;
+//         console.log('xlsx');
+//     } else {
+//         exceltojson = xlstojson;
+//         console.log('xls');
+//     }
+//         try {
+//             xlsxtojson({
+//                 input: req.file.path,
+//                 output: null, 
+//                 lowerCaseHeaders:true
+//             }, function(err,result){
+//                 if(err) {
+//                     res.status(500).send({Error: err});
+//                 }
+//                 res.status(200).send({Result: result});
+//             });
+//         } catch (error){
+//             res.status(500).send({Error: error});
+//         }
+//     }
+// });
+
+
+
+
+// CSV file parser
+const csv = require('csv-parser');
+const fs = require('fs');
+
+
+
+app.post('/csv',upload.single('file'), (req, res) => {
+    var file = req.file;
+    const results = [];
+    console.log(file);
     if(!file){
-        res.status(404).send({msg:'No file found'});
-    } 
-    if(req.file.originalname.split('.')[1] !== 'xlsx'){
-        res.status(500).send({Error: 'Wrong file format'});
-    }else {
-        console.log(file);
-    // if(req.file.originalname.split('.')[1] === 'xlsx'){
-    //     exceltojson = xlsxtojson;
-    //     console.log('xlsx');
-    // } else {
-    //     exceltojson = xlstojson;
-    //     console.log('xls');
-    // }
+        res.status(404).send({Error: 'No file found'});
+    } else {
         try {
-            xlsxtojson({
-                input: req.file.path,
-                output: null, 
-                lowerCaseHeaders:true
-            }, function(err,result){
-                if(err) {
-                    res.status(500).send({Error: err});
-                }
-                res.status(200).send({Result: result});
+            fs.createReadStream(file.path)
+            .pipe(csv())
+            .on('data', (data) => results.push(data))
+            .on('end', () => {
+                res.json(results)
             });
-        } catch (error){
-            res.status(500).send({Error: error});
-        }
+        } catch (error) {
+            console.log(error);
+        }  
     }
 });
