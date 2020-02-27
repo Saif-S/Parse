@@ -3,7 +3,6 @@ const router = express.Router();
 const fs = require('fs');
 const PDF = require('pdfkit');
 const multer = require('multer');
-const multParser = multer();
 
 var storage  = multer.diskStorage({
     destination: function(req, file, cb){
@@ -11,11 +10,10 @@ var storage  = multer.diskStorage({
     },
     filename: function(req, file, cb){
         var d = new Date();
-        cb(null, file.fieldname + '--' + d)
+        cb(null, file.fieldname + '--' + d);
     }
 });
 var upload = multer({storage:storage});
-
 
 router.post('/',upload.single('file'), (req, res) => {
     try{    
